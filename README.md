@@ -2,59 +2,61 @@
 
 ### Setting up the environment
 
-1. Create a workspace folder 
+1. Create a workspace folder
 
-2. Create a virtual environment
+2. Clone this repository inside the workspace folder 
+
+3. Create a virtual environment
 
 ```
 python3 -m venv <name of virtual environment>
 ```
 
-3. Activate the virtual environment
+4. Activate the virtual environment
 
 ```
 source <name of virtual environment>/bin/activate
 ```
 
-4. Install necessary libraries
+5. Install necessary libraries
 
 ```
 pip install -r requirements.txt
 ```
 
-5. Clone the rsl_rl repository found here https://github.com/leggedrobotics/rsl_rl/tree/main
+6. Inside the workspace folder, clone the rsl_rl repository found here https://github.com/leggedrobotics/rsl_rl/tree/main
 
-6. Install the python package
+7. Install the python package
 
 ```
-cd rsl_rl
-pip install -e .
+cd rsl_rl && git checkout v1.0.2 && pip install -e .
+pip install tensorboard
 ```
 
-7. Go back to the workspace
+8. Go back to the root of the workspace
 
 ```
 cd ..
 ```
 
-8. Clone the genesis repository found here https://github.com/Genesis-Embodied-AI/Genesis/tree/main
+9. Clone the genesis repository found here https://github.com/Genesis-Embodied-AI/Genesis/tree/main
 
-9. Go into the main directory
+
+10. Navigate to this go2RL directory
 
 ```
 cd go2RL/
 ```
 
-10. Run the training script
+11. Run the training script
 
 ```
 python go2_train.py
 ```
 
-11. Run the evaluation script
+12. Run the evaluation script
 
 ```
 python go2_eval.py
 ```
-
 
