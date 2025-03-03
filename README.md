@@ -39,6 +39,8 @@ cd ..
 
 8. Clone the genesis repository found here https://github.com/Genesis-Embodied-AI/Genesis/tree/main
 
+9. Follow installation instructions here https://genesis-world.readthedocs.io/en/latest/user_guide/overview/installation.html
+
 9. Go into the main directory
 
 ```
