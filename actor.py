@@ -11,7 +11,9 @@ class Actor(nn.Module):
             nn.Linear(n_observations, 256), 
             nn.ReLU(), 
             nn.Linear(256, 256), 
-            nn.ReLU(), 
+            nn.ReLU(),
+            nn.Linear(256, 256), 
+            nn.ReLU(),
             nn.Linear(256, n_actions), 
             # nn.Softmax(dim=1) Continuoous Action Space
         )
