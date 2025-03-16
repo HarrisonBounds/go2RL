@@ -114,16 +114,16 @@ def get_cfgs():
         },
     }
     reward_cfg = {
-        "tracking_sigma": 0.25,
-        "base_height_target": 0.3,
-        "feet_height_target": 0.075,
+        "tracking_sigma": 0.25, # Tolerance for tracking velocity commands
+        "base_height_target": 0.3, # Target height of the robot's main body [m]
+        "feet_height_target": 0.075, # Desired foot clearance [m]
         "reward_scales": {
-            "tracking_lin_vel": 1.0,
-            "tracking_ang_vel": 0.2,
-            "lin_vel_z": -1.0,
-            "base_height": -50.0,
-            "action_rate": -0.005,
-            "similar_to_default": -0.1,
+            "tracking_lin_vel": 1.0, # Reward for matching commanded lin_vel
+            "tracking_ang_vel": 0.2, # Reward for matching commanded ang_vel
+            "lin_vel_z": -1.0, # Penalty for vertical linear velocity
+            "base_height": -50.0, # Penalty for deviation from target body height
+            "action_rate": -0.005, # Penalty for rapid joint motions
+            "similar_to_default": -0.1, # Penalty for deviation from default joint angles
         },
     }
     command_cfg = {
