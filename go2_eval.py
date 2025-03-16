@@ -4,7 +4,8 @@ import pickle
 
 import torch
 from go2_env import Go2Env
-from rsl_rl.runners import OnPolicyRunner
+# from rsl_rl.runners import OnPolicyRunner
+from runner.on_policy_runner import OnPolicyRunner
 
 import genesis as gs
 

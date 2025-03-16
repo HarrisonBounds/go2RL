@@ -4,7 +4,8 @@ import pickle
 import shutil
 
 from go2_env import Go2Env
-from rsl_rl.runners import OnPolicyRunner
+from runner.on_policy_runner import OnPolicyRunner
+# from rsl_rl.runners import OnPolicyRunner
 
 import genesis as gs
 
@@ -99,7 +100,7 @@ def get_cfgs():
         "base_init_quat": [1.0, 0.0, 0.0, 0.0],
         "episode_length_s": 20.0,
         "resampling_time_s": 4.0,
-        "action_scale": 0.25,
+        "action_scale": 0.4,
         "simulate_action_latency": True,
         "clip_actions": 100.0,
     }
@@ -114,20 +115,20 @@ def get_cfgs():
     }
     reward_cfg = {
         "tracking_sigma": 0.25,
-        "base_height_target": 0.3,
-        "feet_height_target": 0.075,
+        "base_height_target": 0.4,
+        "feet_height_target": 0.08,
         "reward_scales": {
-            "tracking_lin_vel": 1.0,
+            "tracking_lin_vel": 5.0,
             "tracking_ang_vel": 0.2,
             "lin_vel_z": -1.0,
-            "base_height": -50.0,
+            "base_height": -10.0,
             "action_rate": -0.005,
             "similar_to_default": -0.1,
         },
     }
     command_cfg = {
         "num_commands": 3,
-        "lin_vel_x_range": [0.5, 0.5],
+        "lin_vel_x_range": [0.5, 5.0],
         "lin_vel_y_range": [0, 0],
         "ang_vel_range": [0, 0],
     }
