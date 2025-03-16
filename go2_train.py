@@ -14,18 +14,18 @@ def get_train_cfg(exp_name, max_iterations):
 
     train_cfg_dict = {
         "algorithm": {
-            "clip_param": 0.2,
-            "desired_kl": 0.01,
-            "entropy_coef": 0.01,
-            "gamma": 0.99,
-            "lam": 0.95,
-            "learning_rate": 0.001,
-            "max_grad_norm": 1.0,
-            "num_learning_epochs": 5,
-            "num_mini_batches": 4,
-            "schedule": "adaptive",
-            "use_clipped_value_loss": True,
-            "value_loss_coef": 1.0,
+            "clip_param": 0.2, # Clipping parameter for PPO
+            "desired_kl": 0.01, # Desired KL divergence for adaptive learning rate
+            "entropy_coef": 0.01, # Promotes exploration (increasing entropy)
+            "gamma": 0.99, # Discount factor
+            "lam": 0.95, # GAE lambda
+            "learning_rate": 0.001, # Initial learning rate
+            "max_grad_norm": 1.0, # Limits the magnitude of the gradient
+            "num_learning_epochs": 5, # PPO Training epochs per iteration
+            "num_mini_batches": 4, # Number of mini-batches for PPO
+            "schedule": "adaptive", # Adjusts learning rate adaptively
+            "use_clipped_value_loss": True, # Clips value loss
+            "value_loss_coef": 1.0, # Value function loss coefficient
         },
         "init_member_classes": {},
         "policy": {
