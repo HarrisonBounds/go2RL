@@ -8,7 +8,7 @@ totalVerts = NUM_VERTS_X * NUM_VERTS_Y
 totalTriangles = 2 * (NUM_VERTS_X - 1) * (NUM_VERTS_Y - 1)
 offset = -50.0
 TRIANGLE_SIZE = 1.0
-waveheight = 0.3
+waveheight = 0.5
 
 # Initialize vertex and index arrays
 gGroundVertices = [0.0] * totalVerts * 3
