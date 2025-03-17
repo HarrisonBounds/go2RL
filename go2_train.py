@@ -66,14 +66,14 @@ def get_cfgs():
             "FR_hip_joint": 0.0,
             "RL_hip_joint": 0.0,
             "RR_hip_joint": 0.0,
-            "FL_thigh_joint": 0.8,
-            "FR_thigh_joint": 0.8,
-            "RL_thigh_joint": 1.0,
-            "RR_thigh_joint": 1.0,
-            "FL_calf_joint": -1.5,
-            "FR_calf_joint": -1.5,
-            "RL_calf_joint": -1.5,
-            "RR_calf_joint": -1.5,
+            "FL_thigh_joint": 1.0,
+            "FR_thigh_joint": 1.0,
+            "RL_thigh_joint": 1.2,
+            "RR_thigh_joint": 1.2,
+            "FL_calf_joint": -1.8,
+            "FR_calf_joint": -1.8,
+            "RL_calf_joint": -1.8,
+            "RR_calf_joint": -1.8,
         },
         "dof_names": [
             "FR_hip_joint",
@@ -103,6 +103,7 @@ def get_cfgs():
         "action_scale": 0.25,
         "simulate_action_latency": True,
         "clip_actions": 100.0,
+        "target_forward_distance" : 2.0,
     }
     obs_cfg = {
         "num_obs": 45,
@@ -118,17 +119,18 @@ def get_cfgs():
         "base_height_target": 0.2,
         "feet_height_target": 0.075,
         "reward_scales": {
-            "tracking_lin_vel": 1.0,
+            "tracking_lin_vel": 10.0,
             "tracking_ang_vel": 1.0,
-            "lin_vel_z": 5.0,
+            "lin_vel_z": 1.0,
             "base_height": -1.0,
             "action_rate": -0.005,
             "similar_to_default": -0.1,
+            "forward_distance": 5.0,
         },
     }
     command_cfg = {
         "num_commands": 3,
-        "lin_vel_x_range": [0.5, 0.5],
+        "lin_vel_x_range": [1.5, 2.0],
         "lin_vel_y_range": [0, 0],
         "ang_vel_range": [0, 0],
     }

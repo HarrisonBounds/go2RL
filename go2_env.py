@@ -49,10 +49,15 @@ class Go2Env:
             show_viewer=show_viewer,
         )
 
+        if show_viewer:
+            self.target_marker = self.scene.add_entity(
+                gs.morphs.Sphere(radius=0.1, pos=(env_cfg["target_forward_distance"], 0.0, 0.0))
+            )
+
         # add plain
         # self.scene.add_entity(gs.morphs.URDF(file="terrain/plane_curved.urdf", fixed=True))
 
-        self.scene.add_entity(gs.morphs.Terrain(pos=(-20.0,-20.0,0.0),subterrain_types="stepping_stones_terrain"))
+        self.scene.add_entity(gs.morphs.Terrain(pos=(-20.0,-20.0,0.0),subterrain_types="discrete_obstacles_terrain"))
 
         # add robot
         self.base_init_pos = torch.tensor(self.env_cfg["base_init_pos"], device=self.device)
@@ -84,6 +89,8 @@ class Go2Env:
             self.episode_sums[name] = torch.zeros((self.num_envs,), device=self.device, dtype=gs.tc_float)
 
         # initialize buffers
+        self.base_initial_pos = torch.zeros((self.num_envs, 3), device=self.device, dtype=gs.tc_float) # store initial pose for calculating forward distance
+
         self.base_lin_vel = torch.zeros((self.num_envs, 3), device=self.device, dtype=gs.tc_float)
         self.base_ang_vel = torch.zeros((self.num_envs, 3), device=self.device, dtype=gs.tc_float)
         self.projected_gravity = torch.zeros((self.num_envs, 3), device=self.device, dtype=gs.tc_float)
@@ -213,6 +220,9 @@ class Go2Env:
         self.base_ang_vel[envs_idx] = 0
         self.robot.zero_all_dofs_velocity(envs_idx)
 
+        # Store initial position
+        self.base_initial_pos[envs_idx] = self.base_pos[envs_idx]
+
         # reset buffers
         self.last_actions[envs_idx] = 0.0
         self.last_dof_vel[envs_idx] = 0.0
@@ -233,6 +243,9 @@ class Go2Env:
         self.reset_buf[:] = True
         self.reset_idx(torch.arange(self.num_envs, device=self.device))
         return self.obs_buf, None
+
+    def _calculate_forward_distance(self):
+        return self.base_pos[:, 0] - self.base_initial_pos[:, 0]
 
     # ------------ reward functions----------------
     def _reward_tracking_lin_vel(self):
@@ -260,3 +273,10 @@ class Go2Env:
     def _reward_base_height(self):
         # Penalize base height away from target
         return torch.square(self.base_pos[:, 2] - self.reward_cfg["base_height_target"])
+
+    def _reward_forward_distance(self):
+        # Reward forward distance
+        forward_distance = self._calculate_forward_distance()
+        target_distance = self.env_cfg["target_forward_distance"]
+        distance_error = torch.abs(forward_distance - target_distance)
+        return torch.exp(-distance_error/ self.reward_cfg["tracking_sigma"])
