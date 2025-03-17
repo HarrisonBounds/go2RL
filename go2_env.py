@@ -52,7 +52,7 @@ class Go2Env:
         # add plain
         # self.scene.add_entity(gs.morphs.URDF(file="terrain/plane_curved.urdf", fixed=True))
 
-        self.scene.add_entity(gs.morphs.Terrain(pos=(-18.0,-18.0,0.0),subterrain_types="pyramid_stairs_terrain"))
+        self.scene.add_entity(gs.morphs.Terrain(pos=(-20.0,-20.0,0.0),subterrain_types="stepping_stones_terrain"))
 
         # add robot
         self.base_init_pos = torch.tensor(self.env_cfg["base_init_pos"], device=self.device)
