@@ -66,11 +66,11 @@ def get_cfgs():
             "FR_hip_joint": 0.0,
             "RL_hip_joint": 0.0,
             "RR_hip_joint": 0.0,
-            "FL_thigh_joint": 0.8,
+            "FL_thigh_joint": 2.0,  # Raise thigh
             "FR_thigh_joint": 0.8,
             "RL_thigh_joint": 1.0,
             "RR_thigh_joint": 1.0,
-            "FL_calf_joint": -1.5,
+            "FL_calf_joint": -1.8,
             "FR_calf_joint": -1.5,
             "RL_calf_joint": -1.5,
             "RR_calf_joint": -1.5,
@@ -93,7 +93,7 @@ def get_cfgs():
         "kp": 20.0,
         "kd": 0.5,
         # termination
-        "termination_if_roll_greater_than": 10,  # degree
+        "termination_if_roll_greater_than": 12,  # degree
         "termination_if_pitch_greater_than": 10,
         # base pose
         "base_init_pos": [0.0, 0.0, 0.42],
@@ -103,6 +103,7 @@ def get_cfgs():
         "action_scale": 0.25,
         "simulate_action_latency": True,
         "clip_actions": 100.0,
+        "target_forward_distance": 2.0,
     }
     obs_cfg = {
         "num_obs": 45,
@@ -113,17 +114,44 @@ def get_cfgs():
             "dof_vel": 0.05,
         },
     }
-    reward_cfg = {
-        "tracking_sigma": 0.25,
-        "base_height_target": 0.3,
-        "feet_height_target": 0.075,
+    # reward_cfg = { # Walking
+    #     "tracking_sigma": 0.25,
+    #     "base_height_target": 0.3,
+    #     "feet_height_target": 0.075,
+    #     "reward_scales": {
+    #         "tracking_lin_vel": 1.0,
+    #         "tracking_ang_vel": 0.2,
+    #         "lin_vel_z": -1.0,
+    #         "base_height": -50.0,
+    #         "action_rate": -0.005,
+    #         "similar_to_default": -0.1,
+    #     },
+    # }
+    # reward_cfg = {  # Strafing
+    #     "tracking_sigma": 0.25,  # Tolerance for tracking velocity commands
+    #     "base_height_target": 0.3,  # Target height of main body [m]
+    #     "feet_height_target": 0.0075,  # Desired foot clearance [m]
+    #     "reward_scales": {
+    #         "tracking_lin_vel": 1.0,  # Reward for matching commanded lin_vel
+    #         "tracking_ang_vel": 0.2,  # Reward for matching commanded ang_vel
+    #         "lin_vel_z": -1.0,  # Penalty for vertical linear velocity
+    #         "base_height": -50.0,  # Penalty for deviation from target body height
+    #         "action_rate": -0.005,  # Penalty for rapid joint motions
+    #         "similar_to_default": -0.075,  # Penalty for deviation from default joint angles
+    #     },
+    # }
+    reward_cfg = {  # Limping
+        "tracking_sigma": 0.25,  # Tolerance for tracking velocity commands
+        "base_height_target": 0.3,  # Target height of main body [m]
+        "feet_height_target": 0.01,  # Desired foot clearance [m]
         "reward_scales": {
-            "tracking_lin_vel": 1.0,
-            "tracking_ang_vel": 0.2,
-            "lin_vel_z": -1.0,
-            "base_height": -50.0,
-            "action_rate": -0.005,
-            "similar_to_default": -0.1,
+            "tracking_lin_vel": 1.25,  # Reward for matching commanded lin_vel
+            "tracking_ang_vel": 0.2,  # Reward for matching commanded ang_vel
+            "lin_vel_z": -1.0,  # Penalty for vertical linear velocity
+            "base_height": -50.0,  # Penalty for deviation from target body height
+            "action_rate": -0.005,  # Penalty for rapid joint motions
+            "similar_to_default": -0.1,  # Penalty for deviation from default joint angles
+            "forward_distance": 5.0
         },
     }
     command_cfg = {
@@ -164,7 +192,8 @@ def main():
         open(f"{log_dir}/cfgs.pkl", "wb"),
     )
 
-    runner.learn(num_learning_iterations=args.max_iterations, init_at_random_ep_len=True)
+    runner.learn(num_learning_iterations=args.max_iterations,
+                 init_at_random_ep_len=True)
 
 
 if __name__ == "__main__":
