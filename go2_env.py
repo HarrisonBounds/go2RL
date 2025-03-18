@@ -84,13 +84,15 @@ class Go2Env:
         # prepare reward functions and multiply reward scales by dt
         self.reward_functions, self.episode_sums = dict(), dict()
         for name in self.reward_scales.keys():
-            # print(f'Adding reward function: {name}')
             self.reward_scales[name] *= self.dt
             self.reward_functions[name] = getattr(self, "_reward_" + name)
             self.episode_sums[name] = torch.zeros(
                 (self.num_envs,), device=self.device, dtype=gs.tc_float)
 
         # initialize buffers
+        # store initial pose for calculating forward distance
+        self.base_initial_pos = torch.zeros(
+            (self.num_envs, 3), device=self.device, dtype=gs.tc_float)
         self.base_lin_vel = torch.zeros(
             (self.num_envs, 3), device=self.device, dtype=gs.tc_float)
         self.base_ang_vel = torch.zeros(
@@ -146,20 +148,8 @@ class Go2Env:
         self.actions = torch.clip(
             actions, -self.env_cfg["clip_actions"], self.env_cfg["clip_actions"])
         exec_actions = self.last_actions if self.simulate_action_latency else self.actions
-
-        # Fix some of the joints for teaching to walk without a leg
-        # fixed_leg_joints = ["FL_hip_joint", "FL_thigh_joint", "FL_calf_joint"]
-        # fixed_leg_indices = [self.env_cfg["dof_names"].index(
-        #     j) for j in fixed_leg_joints]
-
         target_dof_pos = exec_actions * \
             self.env_cfg["action_scale"] + self.default_dof_pos
-        # Fix the legs to the default position
-        # target_dof_pos[:,
-        #      target_dof_pos[:,
-        #                  fixed_leg_indices] = self.default_dof_pos[fixed_leg_indices]
-
-        # Apply Control
         self.robot.control_dofs_position(target_dof_pos, self.motor_dofs)
         self.scene.step()
 
@@ -251,15 +241,6 @@ class Go2Env:
             envs_idx=envs_idx,
         )
 
-        # Reset front left leg to default lifted position
-        # front_left_leg_indices = [
-        #     self.env_cfg["dof_names"].index("FL_hip_joint"),
-        #     self.env_cfg["dof_names"].index("FL_thigh_joint"),
-        #     self.env_cfg["dof_names"].index("FL_calf_joint"),
-        # ]
-        # self.dof_pos[envs_idx][:, front_left_leg_indices] = \
-        #     self.default_dof_pos[front_left_leg_indices]
-
         # reset base
         self.base_pos[envs_idx] = self.base_init_pos
         self.base_quat[envs_idx] = self.base_init_quat.reshape(1, -1)
@@ -270,6 +251,9 @@ class Go2Env:
         self.base_lin_vel[envs_idx] = 0
         self.base_ang_vel[envs_idx] = 0
         self.robot.zero_all_dofs_velocity(envs_idx)
+
+        # Store initial position
+        self.base_initial_pos[envs_idx] = self.base_pos[envs_idx]
 
         # reset buffers
         self.last_actions[envs_idx] = 0.0
@@ -293,13 +277,10 @@ class Go2Env:
         self.reset_idx(torch.arange(self.num_envs, device=self.device))
         return self.obs_buf, None
 
-    # ------------ reward functions----------------
-    # def _reward_front_left_leg_usage(self):
-    #     # Penalize forces applied to the front left leg to discourage using it
-    #     front_left_leg_indices = [self.env_cfg["dof_names"].index(
-    #         j) for j in ["FL_hip_joint", "FL_thigh_joint", "FL_calf_joint"]]
-    #     return -torch.sum(torch.abs(self.actions[:, front_left_leg_indices]), dim=1)
+    def _calculate_forward_distance(self):
+        return self.base_pos[:, 0] - self.base_initial_pos[:, 0]
 
+    # ------------ reward functions----------------
     def _reward_tracking_lin_vel(self):
         # Tracking of linear velocity commands (xy axes)
         lin_vel_error = torch.sum(torch.square(
@@ -327,3 +308,10 @@ class Go2Env:
     def _reward_base_height(self):
         # Penalize base height away from target
         return torch.square(self.base_pos[:, 2] - self.reward_cfg["base_height_target"])
+
+    def _reward_forward_distance(self):
+        # Reward forward distance
+        forward_distance = self._calculate_forward_distance()
+        target_distance = self.env_cfg["target_forward_distance"]
+        distance_error = torch.abs(forward_distance - target_distance)
+        return torch.exp(-distance_error / self.reward_cfg["tracking_sigma"])
