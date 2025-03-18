@@ -66,7 +66,7 @@ def get_cfgs():
             "FR_hip_joint": 0.0,
             "RL_hip_joint": 0.0,
             "RR_hip_joint": 0.0,
-            "FL_thigh_joint": 0.8,
+            "FL_thigh_joint": 1.4,  # Raise thigh
             "FR_thigh_joint": 0.8,
             "RL_thigh_joint": 1.0,
             "RR_thigh_joint": 1.0,
@@ -126,23 +126,37 @@ def get_cfgs():
     #         "similar_to_default": -0.1,
     #     },
     # }
-    reward_cfg = {  # Strafing
+    # reward_cfg = {  # Strafing
+    #     "tracking_sigma": 0.25,  # Tolerance for tracking velocity commands
+    #     "base_height_target": 0.3,  # Target height of main body [m]
+    #     "feet_height_target": 0.0075,  # Desired foot clearance [m]
+    #     "reward_scales": {
+    #         "tracking_lin_vel": 1.0,  # Reward for matching commanded lin_vel
+    #         "tracking_ang_vel": 0.2,  # Reward for matching commanded ang_vel
+    #         "lin_vel_z": -1.0,  # Penalty for vertical linear velocity
+    #         "base_height": -50.0,  # Penalty for deviation from target body height
+    #         "action_rate": -0.005,  # Penalty for rapid joint motions
+    #         "similar_to_default": -0.075,  # Penalty for deviation from default joint angles
+    #     },
+    # }
+    reward_cfg = {  # Limping
         "tracking_sigma": 0.25,  # Tolerance for tracking velocity commands
         "base_height_target": 0.3,  # Target height of main body [m]
-        "feet_height_target": 0.0075,  # Desired foot clearance [m]
+        "feet_height_target": 0.075,  # Desired foot clearance [m]
         "reward_scales": {
             "tracking_lin_vel": 1.0,  # Reward for matching commanded lin_vel
             "tracking_ang_vel": 0.2,  # Reward for matching commanded ang_vel
             "lin_vel_z": -1.0,  # Penalty for vertical linear velocity
             "base_height": -50.0,  # Penalty for deviation from target body height
+            # "front_left_leg_usage": -5.0,
             "action_rate": -0.005,  # Penalty for rapid joint motions
-            "similar_to_default": -0.075,  # Penalty for deviation from default joint angles
+            "similar_to_default": -0.065,  # Penalty for deviation from default joint angles
         },
     }
     command_cfg = {
         "num_commands": 3,
-        "lin_vel_x_range": [0, 0],
-        "lin_vel_y_range": [0.5, 0.5],
+        "lin_vel_x_range": [0.5, 0.5],
+        "lin_vel_y_range": [0, 0],
         "ang_vel_range": [0, 0],
     }
 
