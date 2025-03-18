@@ -114,20 +114,16 @@ def get_cfgs():
         },
     }
     reward_cfg = {
-        "tracking_sigma": 0.25,
+       "tracking_sigma": 0.25,
         "base_height_target": 0.35,
-        "feet_height_target": 0.075,
+        "feet_height_target": 0.08,
         "reward_scales": {
-            "forward_velocity": 10.0,
             "tracking_lin_vel": 5.0,
-            "tracking_ang_vel": -0.1,
+            "tracking_ang_vel": 0.2,
             "lin_vel_z": -1.0,
-            "base_height": -45.0,
+            "base_height": -5.0,
             "action_rate": -0.005,
-            "similar_to_default": -0.05,
-            "diagonal_gait": 1.0,
-            "aligned_hips": 1.0,
-            "straight_line": 1.0,
+            "similar_to_default": -0.05
         },
     }
     command_cfg = {

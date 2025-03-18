@@ -237,6 +237,110 @@ class Go2Env:
         # Tracking of linear velocity commands (xy axes)
         lin_vel_error = torch.sum(torch.square(self.commands[:, :2] - self.base_lin_vel[:, :2]), dim=1)
         return torch.exp(-lin_vel_error / self.reward_cfg["tracking_sigma"])
+    
+    def _reward_forward_velocity(self):
+        """
+        Reward function that strongly encourages forward movement.
+        The faster the robot moves forward, the higher the reward.
+        """
+        # Get the forward velocity (x-component of linear velocity)
+        forward_vel = self.base_lin_vel[:, 0]
+        
+        # Simple linear reward - the faster, the better
+        # Using torch.clamp to ensure we don't reward negative velocity
+        forward_reward = torch.clamp(forward_vel, min=0.0)
+        
+        # For very fast movement, we can add a bonus with exponential scaling
+        speed_bonus = torch.square(forward_vel) * (forward_vel > 2.0)
+        
+        return forward_reward + speed_bonus
+    
+    def _reward_diagonal_gait(self):
+        """
+        Reward function that encourages diagonal legs to move in sync:
+        - Front-left (FL) with back-right (RR)
+        - Front-right (FR) with back-left (RL)
+        
+        This promotes a natural walking gait pattern.
+        """
+        # Get the velocities of each leg joint
+        # Based on the dof_names order in your env_cfg:
+        # FR = [0,1,2], FL = [3,4,5], RR = [6,7,8], RL = [9,10,11]
+        
+        # Calculate correlation between diagonal pairs
+        fl_vel = self.dof_vel[:, 3:6]  # Front-left leg joints
+        rr_vel = self.dof_vel[:, 6:9]  # Back-right leg joints
+        
+        fr_vel = self.dof_vel[:, 0:3]  # Front-right leg joints
+        rl_vel = self.dof_vel[:, 9:12]  # Back-left leg joints
+        
+        # Calculate how synchronized the diagonal pairs are
+        # Higher positive correlation = better diagonal synchronization
+        fl_rr_sync = torch.sum(fl_vel * rr_vel, dim=1) / (torch.norm(fl_vel, dim=1) * torch.norm(rr_vel, dim=1) + 1e-8)
+        fr_rl_sync = torch.sum(fr_vel * rl_vel, dim=1) / (torch.norm(fr_vel, dim=1) * torch.norm(rl_vel, dim=1) + 1e-8)
+        
+        # We want both diagonal pairs to be synchronized
+        diagonal_sync = fl_rr_sync + fr_rl_sync
+        
+        # Additionally, we want the opposite diagonal pairs to be out of phase
+        # This is achieved by penalizing positive correlation between FL-RL and FR-RR
+        fl_rl_sync = torch.sum(fl_vel * rl_vel, dim=1) / (torch.norm(fl_vel, dim=1) * torch.norm(rl_vel, dim=1) + 1e-8)
+        fr_rr_sync = torch.sum(fr_vel * rr_vel, dim=1) / (torch.norm(fr_vel, dim=1) * torch.norm(rr_vel, dim=1) + 1e-8)
+        
+        # We want these to be negative (out of phase)
+        opposite_sync_penalty = torch.clamp(fl_rl_sync + fr_rr_sync, min=0)
+        
+        # Final reward is diagonal synchronization minus penalty for same-side synchronization
+        return diagonal_sync - opposite_sync_penalty
+    
+    def _reward_straight_line(self):
+        """
+        Reward function that encourages straight line movement by penalizing
+        lateral velocity and yaw rotation.
+        """
+        # Get lateral velocity (y-component) and yaw velocity (z-component of angular velocity)
+        lateral_vel = self.base_lin_vel[:, 1]
+        yaw_vel = self.base_ang_vel[:, 2]
+        
+        # Penalize any lateral movement
+        lateral_penalty = torch.square(lateral_vel)
+        
+        # Penalize any yaw rotation
+        yaw_penalty = torch.square(yaw_vel)
+        
+        # Return negative of the combined penalty
+        return -lateral_penalty - yaw_penalty
+        
+    def _reward_aligned_hips(self):
+        """
+        Reward function that encourages the hip joints to stay horizontally aligned.
+        This helps maintain a stable body posture during locomotion.
+        """
+        # Get hip joint positions for all four legs
+        fl_hip_pos = self.dof_pos[:, 3]  # Front-left hip joint position
+        fr_hip_pos = self.dof_pos[:, 0]  # Front-right hip joint position
+        rl_hip_pos = self.dof_pos[:, 9]  # Rear-left hip joint position
+        rr_hip_pos = self.dof_pos[:, 6]  # Rear-right hip joint position
+        
+        # Calculate the deviation from alignment
+        # For front legs: we want FL and FR hip positions to be similar
+        front_hips_deviation = torch.abs(fl_hip_pos - fr_hip_pos)
+        
+        # For rear legs: we want RL and RR hip positions to be similar
+        rear_hips_deviation = torch.abs(rl_hip_pos - rr_hip_pos)
+        
+        # For left side: we want FL and RL hip positions to be similar
+        left_side_deviation = torch.abs(fl_hip_pos - rl_hip_pos)
+        
+        # For right side: we want FR and RR hip positions to be similar
+        right_side_deviation = torch.abs(fr_hip_pos - rr_hip_pos)
+        
+        # Calculate the total deviation
+        total_deviation = front_hips_deviation + rear_hips_deviation + left_side_deviation + right_side_deviation
+        
+        # Return a negative reward proportional to the deviation
+        # Using exponential decay to make the reward more sensitive to small deviations
+        return torch.exp(-5.0 * total_deviation)
 
     def _reward_tracking_ang_vel(self):
         # Tracking of angular velocity commands (yaw)
